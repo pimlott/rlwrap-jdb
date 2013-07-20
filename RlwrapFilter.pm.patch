@@ -1,0 +1,17 @@
+--- RlwrapFilter.pm	2013-07-20 09:36:32.643296284 -0700
++++ /usr/share/rlwrap/filters/RlwrapFilter.pm	2012-04-11 08:18:52.000000000 -0700
+@@ -34,11 +34,9 @@
+ my $we_are_running_under_rlwrap = defined $ENV{RLWRAP_COMMAND_PID};
+ 
+ 
+-unless ($^C) {
+-    # die() and warn() must communicate via rlwrap, not via STDERR
+-    $SIG{__DIE__}  = \&die_with_error_message;
+-    $SIG{__WARN__} = \&warn_with_info_message;
+-}
++# die() and warn() must communicate via rlwrap, not via STDERR
++$SIG{__DIE__}  = \&die_with_error_message;
++$SIG{__WARN__} = \&warn_with_info_message;
+ 
+ # automagically have a setter/getter for every key of %$self
+ sub AUTOLOAD {

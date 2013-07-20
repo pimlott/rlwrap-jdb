@@ -51,6 +51,13 @@ The magic lives in the rlwrap filter, `rlwrap-jdb-filter`, written in Perl
 and using the `RlwrapFilter` module, which comes with `rlwrap` and is
 well-documented.
 
+If you want to syntax check the filter with `perl -c`, copy
+`RlwrapFilter.pm` to the current directory so it can be found by the filter.
+However, you will run across the problem that `RlwrapFilter` hijacks the
+error hooks.  I suggest applying `RlwrapFilter.pm.patch` to the local copy.
+This is only for development, and there is no reason to modify the installed
+``RlwrapFilter.pm`.
+
 TODO
 ====
 
