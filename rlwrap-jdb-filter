@@ -1,0 +1,94 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use lib ($ENV{RLWRAP_FILTERDIR} or '.');
+use RlwrapFilter;
+
+my $filter = RlwrapFilter->new();
+my $name = $filter->name();
+
+my $x = 1;
+
+my($raw_line, $prev_expanded_line, $pager_fd);
+
+$filter->input_handler(sub {
+    my($line) = @_;
+    $raw_line = $line;
+    my($expanded_line) = expand($line);
+    if ($expanded_line =~ /^\s*help/) {
+        open($pager_fd, '|-', 'less') or die $!;
+    }
+    $prev_expanded_line = $expanded_line;
+    $expanded_line;
+});
+$filter->echo_handler(sub { $raw_line });
+
+# TODO complete breakpoints
+$filter->completion_handler(sub {
+    my($l, $prefix, @completions) = @_;
+    @completions;
+});
+
+sub expand {
+    my($line) = @_;
+    if ($line =~ /^\s*$/) {
+        $prev_expanded_line;
+    } else {
+        $line =~ s/^\s*(\w+)(.*)/expand_alias($1,$2)/e;
+        $line;
+    }
+}
+
+my(%aliases) = (
+    h  => 'help',
+    B  => 'clear',
+    bt => 'where',
+    l  => 'list',
+    p  => 'print',
+    d  => 'dump',
+    r  => 'run',
+    s  => 'step',
+    r  => 'step up',
+    n  => 'next',
+    c  => 'cont',
+    q  => 'quit',
+);
+sub expand_alias {
+    my($s, $r) = @_;
+    if ($s eq 'b') {
+        $r =~ /^\s*$/
+            ? 'clear' :
+        $r =~ /:/
+            ? 'stop at'
+            : 'stop in';
+    } else {
+        $aliases{$s} // $s;
+    }
+}
+
+$filter->output_handler(sub {
+    my($s) = @_;
+    if (defined($pager_fd)) {
+        print $pager_fd $s;
+        ''
+    } else {
+        $s;
+    }
+});
+$filter->prompt_handler(sub {
+    my($prompt) = @_;
+    if (defined($pager_fd)) {
+        close($pager_fd) or die $!;
+        $pager_fd = undef;
+    }
+    $prompt;
+});
+
+$filter->help_text(<<EOF);
+Usage: rlwrap -z $name <command>
+handy aliases and auto-repetiton for jdb
+EOF
+
+$filter->run();

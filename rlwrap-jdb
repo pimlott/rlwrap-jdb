@@ -1,0 +1,4 @@
+#!/bin/sh
+
+dir="$(dirname $0)"
+rlwrap --histsize 5000 --command-name jdb --filter "$dir/rlwrap-jdb-filter" "$@"
