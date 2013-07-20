@@ -44,15 +44,15 @@ sub expand {
 my(%aliases) = (
     h  => 'help',
     B  => 'clear',
-    bt => 'where',
-    l  => 'list',
-    p  => 'print',
-    d  => 'dump',
     r  => 'run',
+    n  => 'next',
     s  => 'step',
     r  => 'step up',
-    n  => 'next',
     c  => 'cont',
+    p  => 'print',
+    d  => 'dump',
+    bt => 'where',
+    l  => 'list',
     q  => 'quit',
 );
 sub expand_alias {

@@ -15,6 +15,29 @@ Note you have to include `jdb` in the arguments to `rlwrap-jdb`.  This
 allows you to run other wrapper scripts, such as an app startup script or a
 `mvn exec:exec` invocation.
 
+Within jdb, you can use use all normal commands with history and
+command-line editing.  In addition, `rlwrap-jdb` adds these aliases:
+
+    h               help (displays in a pager)
+    b <breakpoint>  stop in or stop at, depending on <breakpoint> syntax
+    b               clear (list breakpoints)
+    B               clear (list or delete breakpoints)
+    r               run
+    n               next
+    s               step
+    r               step up
+    c               cont
+    p               print
+    d               dump
+    bt              where
+    l               list
+    q               quit
+
+Generally, the aliases are inspired by `gdb`, with some influence from
+Perl's debugger.
+
+Finally, if you just hit return, the last command is repeated.
+
 Building
 ========
 
