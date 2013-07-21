@@ -34,7 +34,7 @@ $filter->completion_handler(sub {
 sub expand {
     my($line) = @_;
     if ($line =~ /^\s*$/) {
-        $prev_expanded_line;
+        $prev_expanded_line // '';
     } else {
         $line =~ s/^\s*(\w+)(.*)/expand_alias($1,$2)/e;
         $line;
