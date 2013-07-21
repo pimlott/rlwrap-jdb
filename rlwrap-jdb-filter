@@ -36,7 +36,7 @@ sub expand {
     if ($line =~ /^\s*$/) {
         $prev_expanded_line // '';
     } else {
-        $line =~ s/^\s*(\w+)(.*)/expand_alias($1,$2)/e;
+        $line =~ s/^\s*(\w+)(.*)/expand_alias($1,$2) . $2/e;
         $line;
     }
 }
