@@ -18,7 +18,7 @@ Usage
 
     Options:
       --breakpoints-file F  File containing breakpoints for completion;
-                            generate with make-breakpoints.
+                            generate with list-java-breakpoints.
 
     RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
     rlwrap options are given defaults:
@@ -54,10 +54,10 @@ Breakpoint completion
 ---------------------
 
 `rlwrap-jdb` can complete breakpoints.  You first need to run the included
-`make-breakpoints-file` with your `$CLASSPATH` environment variable set,
+`list-java-breakpoints` with your `$CLASSPATH` environment variable set,
 saving the output to a file:
 
-    CLASSPATH=... make-breakpoints-file > breakpoints-file
+    CLASSPATH=... list-java-breakpoints > breakpoints-file
 
 Then, pass `--breakpoints-file breakpoints-file` to `rlwrap-jdb`.
 
@@ -77,11 +77,11 @@ Building
 ========
 
 Nothing to build.  You can just copy `rlwrap-jdb`, `rlwrap-jdb-filter`,
-and `make-breakpoints-file` into your `bin` directory.
+and `list-java-breakpoints` into your `bin` directory.
 
 To run, you need Perl, and a few modules.  I think the only module that does
 not come bundled with Perl is `Archive::Zip`, which is only needed by
-`make-breakpoints-file`.  You can install it as `libarchive-zip-perl` on
+`list-java-breakpoints`.  You can install it as `libarchive-zip-perl` on
 Debian-based systems.
 
 Hacking

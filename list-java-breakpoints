@@ -12,7 +12,7 @@ sub usage {
     print $fh @msg, "\n" if @msg;
     print $fh <<EOF;
 Usage:
-  make-breakpoints-file
+  list-java-breakpoints
 Scan the \$CLASSPATH for breakpoints, writing them to STDOUT in a form that
 is understood by rlwrap-jdb.
 EOF

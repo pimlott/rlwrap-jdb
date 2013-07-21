@@ -19,7 +19,7 @@ invocation, etc. that eventually calls jdb.
 
 Options:
   --breakpoints-file F  File containing breakpoints for completion;
-                        generate with make-breakpoints.
+                        generate with list-java-breakpoints.
 
 RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
 rlwrap options are given defaults:
