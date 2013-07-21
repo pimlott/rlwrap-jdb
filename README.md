@@ -1,7 +1,7 @@
 `rlwrap-jdb` is a rear-guard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
-history, but (using rlwrap's filter mechanism) handy aliases and command
-repetition.
+history, but (using rlwrap's filter mechanism) handy aliases, command
+repetition, and breakpoint completion.
 
 [jdb]: http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/jdb.html
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
@@ -9,11 +9,22 @@ repetition.
 Usage
 =====
 
-    Usage: rlwrap-jdb PROG [ARG]...
+    Usage:
+      rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
+    Run PROG with command-line editing and history as well as handy aliases,
+    command repetition, and breakpoint completion for jdb.  Note PROG doesn't
+    have to be jdb; it could be an application startup script, a mvn exec:exe
+    invocation, etc. that eventually calls jdb.
 
-Note you have to include `jdb` in the arguments to `rlwrap-jdb`.  This
-allows you to run other wrapper scripts, such as an app startup script or a
-`mvn exec:exec` invocation.
+    Options:
+      --breakpoints-file F  File containing breakpoints for completion;
+                            generate with make-breakpoints.
+
+    RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
+    rlwrap options are given defaults:
+      --command-name jdb
+      --break-chars :
+      --histsize 5000
 
 Within jdb, you can use use all normal commands with history and
 command-line editing.  In addition, `rlwrap-jdb` adds these aliases:
@@ -36,13 +47,42 @@ command-line editing.  In addition, `rlwrap-jdb` adds these aliases:
 Generally, the aliases are inspired by `gdb`, with some influence from
 Perl's debugger.
 
-Finally, if you just hit return, the last command is repeated.
+If you just hit return, the last `next`, `step`, `step up` or `cont` command
+is repeated.
+
+Breakpoint completion
+---------------------
+
+`rlwrap-jdb` can complete breakpoints.  You first need to run the included
+`make-breakpoints-file` with your `$CLASSPATH` environment variable set,
+saving the output to a file:
+
+    CLASSPATH=... make-breakpoints-file > breakpoints-file
+
+Then, pass `--breakpoints-file breakpoints-file` to `rlwrap-jdb`.
+
+The support is not ideal, because the completion list may be too long (eg.,
+if you type `b com<TAB>` you will get all methods under the `com` package).
+I am looking for a way to support partial completion.
+
+I also recommend adding to your `~/.inputrc`:
+
+    $if jdb
+        set show-all-if-unmodified On
+    $endif
+
+This avoids needing to hit tab twice to get completions.
 
 Building
 ========
 
-Nothing to build.  You can just copy `rlwrap-jdb` and `rlwrap-jdb-filter`
-into your `bin` directory.
+Nothing to build.  You can just copy `rlwrap-jdb`, `rlwrap-jdb-filter`,
+and `make-breakpoints-file` into your `bin` directory.
+
+To run, you need Perl, and a few modules.  I think the only module that does
+not come bundled with Perl is `Archive::Zip`, which is only needed by
+`make-breakpoints-file`.  You can install it as `libarchive-zip-perl` on
+Debian-based systems.
 
 Hacking
 =======
@@ -61,7 +101,9 @@ This is only for development, and there is no reason to modify the installed
 TODO
 ====
 
-- More customized completion.
+- Partial completion of breakpoints (probably requires deeper integration
+  into readline).
+- More customized completions.
 
 Please report bugs and requests as GitHub issues, or send me email.
 

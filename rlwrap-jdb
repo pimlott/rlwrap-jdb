@@ -12,9 +12,10 @@ sub usage {
     print $fh <<EOF;
 Usage:
   rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
-Run PROG with command-line editing as well as handy aliases, completion, and
-auto-repitition for jdb.  Note PROG doesn't have to be jdb; it could be an
-application startup script, a mvn exec:exe invocation, etc.
+Run PROG with command-line editing and history as well as handy aliases,
+command repetition, and breakpoint completion for jdb.  Note PROG doesn't
+have to be jdb; it could be an application startup script, a mvn exec:exe
+invocation, etc. that eventually calls jdb.
 
 Options:
   --breakpoints-file F  File containing breakpoints for completion;
