@@ -6,6 +6,16 @@ use warnings;
 use lib ($ENV{RLWRAP_FILTERDIR} or '.');
 use RlwrapFilter;
 
+my($breakpoints_file) = @ARGV;
+my(@breakpoints);
+if (defined($breakpoints_file)) {
+    open IN, '<', $breakpoints_file or die $!;
+    while (<IN>) {
+        chomp;
+        push(@breakpoints, $_);
+    }
+}
+
 my $filter = RlwrapFilter->new();
 my $name = $filter->name();
 
@@ -26,11 +36,85 @@ $filter->input_handler(sub {
 });
 $filter->echo_handler(sub { $raw_line });
 
-# TODO complete breakpoints
 $filter->completion_handler(sub {
     my($l, $prefix, @completions) = @_;
+    if ($l =~ /^\s*(?:b|stop at|stop in)\s+(\S+)/) {
+        # try to check that they are completing in the break arg
+        if ($prefix eq $1) {
+            push(@completions, breakpoint_completions(\@breakpoints, $prefix));
+        }
+    }
     @completions;
 });
+
+sub breakpoint_completions {
+    my($breakpoints, $prefix) = @_;
+    my($min) = breakpoints_search($breakpoints, sub {
+        my($breakpoint) = @_;
+        return 0 if $breakpoint eq $prefix;
+        return 2 if $breakpoint lt $prefix;
+        return -1 if substr($breakpoint, 0, length($prefix)) eq $prefix;
+        return -2 if $breakpoint gt $prefix;
+    });
+    return if !defined($min);
+    my($max) = breakpoints_search($breakpoints, sub {
+        my($breakpoint) = @_;
+        return 0 if $breakpoint eq $prefix;
+        return 2 if $breakpoint lt $prefix;
+        return 1 if substr($breakpoint, 0, length($prefix)) eq $prefix;
+        return -2 if $breakpoint gt $prefix;
+    });
+    @$breakpoints[$min..$max];
+}
+
+sub breakpoints_search {
+    my($breakpoints, $cmp) = @_;
+    my $min = 0;
+    my $max = $#$breakpoints;
+    my $mid = int(($min + $max) / 2);
+    while ($min <= $max) {
+        my $r = $cmp->($breakpoints->[$mid]);
+        if      ($r == -2) {  # definitely go lower
+            $max = $mid - 1;
+            $mid = int(($min + $max) / 2);
+        } elsif ($r == -1) {  # maybe go lower
+            return $min if $min == $max;
+            $max = $mid;
+            $mid = int(($min + $max) / 2);
+        } elsif ($r == 0) {
+            return $mid;
+        } elsif ($r == 1) {   # maybe go higher
+            return $min if $min == $max;
+            $min = $mid;
+            $mid = int(($min + $max + 1) / 2);
+        } elsif ($r == 2) {   # definitely go higher
+            $min = $mid + 1;
+            $mid = int(($min + $max + 1) / 2);
+        }
+    }
+    undef;
+}
+
+sub common_prefix {
+    my($a, $b) = @_;
+    my $i = 0;
+    while (1) {
+        return substr($a, 0, $i)
+            if $i>=length($a) || $i>=length($b) ||
+                substr($a, $i, 1) ne substr($b, $i, 1);
+        $i++;
+    }
+}
+
+sub uniq {
+    my(@r, $last);
+    foreach (@_) {
+        next if defined($last) && $_ eq $last;
+        push(@r, $_);
+        $last = $_;
+    }
+    @r
+}
 
 sub expand {
     my($line) = @_;
@@ -88,8 +172,8 @@ $filter->prompt_handler(sub {
 });
 
 $filter->help_text(<<EOF);
-Usage: rlwrap -z $name <command>
-handy aliases and auto-repetiton for jdb
+Usage: rlwrap -z '$name BREAKPOINTS-FILE' <command>
+Handy aliases, completion, and auto-repetition for jdb.
 EOF
 
 $filter->run();

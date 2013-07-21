@@ -61,7 +61,7 @@ This is only for development, and there is no reason to modify the installed
 TODO
 ====
 
-- Customized completion, especially of breakpoints.
+- More customized completion.
 
 Please report bugs and requests as GitHub issues, or send me email.
 

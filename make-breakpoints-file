@@ -1,0 +1,58 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use Archive::Zip ();
+use File::Find qw( find );
+use Getopt::Long;
+
+sub usage {
+    my($status, @msg) = @_;
+    my $fh = $status == 0 ? \*STDOUT : \*STDERR;
+    print $fh @msg, "\n" if @msg;
+    print $fh <<EOF;
+Usage:
+  make-breakpoints-file
+Scan the \$CLASSPATH for breakpoints, writing them to STDOUT in a form that
+is understood by rlwrap-jdb.
+EOF
+    exit($status);
+}
+
+GetOptions(
+    help            => sub { usage(0) },
+) or usage(1);
+
+my(@classpath) = split(':', $ENV{CLASSPATH});
+my @classes = map {
+    /^$/ ? () :
+    -d $_ ? do {
+        my $dir = $_;
+        my(@files);
+        find(sub { push(@files, $File::Find::name) if /\.class$/ }, $dir);
+        map { s/$dir\/?//; s/\.class$//; s/\//./g; $_ } @files
+    } :
+    -f $_ && /\.jar$/ ? do {
+        my $jar = $_;
+        my $zip = Archive::Zip->new($jar) or die;
+        map { s/\.class$//; s/\//./g; $_ }
+            grep { /\.class$/ } $zip->memberNames();
+    } : warn("unrecognized classpath entry $_\n");
+} @classpath;
+
+open JAVAP, '-|', qw( javap -p ), @classes or die $!;
+my(@breakpoints, $class);
+while (<JAVAP>) {
+    if      (/\bclass (\S+)/) {
+        $class = $1;
+    } elsif (/\b(\S+)\((.*?)\);/) {
+        my $method = $1;
+        my($args) = $2;
+        $args =~ s/ //g;
+        $method = '<init>' if $method eq $class;
+        push(@breakpoints, "$class.$method($args)");
+    }
+}
+foreach (sort(@breakpoints)) {
+    print "$_\n";
+}
