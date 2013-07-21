@@ -11,16 +11,17 @@ my $name = $filter->name();
 
 my $x = 1;
 
-my($raw_line, $prev_expanded_line, $pager_fd);
+my($raw_line, $repeat_expanded_line, $pager_fd);
 
 $filter->input_handler(sub {
     my($line) = @_;
     $raw_line = $line;
     my($expanded_line) = expand($line);
+    $repeat_expanded_line = $expanded_line
+        if $expanded_line =~ /^\s*(?:next|step|step up|cont)\s*$/;
     if ($expanded_line =~ /^\s*help/) {
         open($pager_fd, '|-', 'less') or die $!;
     }
-    $prev_expanded_line = $expanded_line;
     $expanded_line;
 });
 $filter->echo_handler(sub { $raw_line });
@@ -34,7 +35,7 @@ $filter->completion_handler(sub {
 sub expand {
     my($line) = @_;
     if ($line =~ /^\s*$/) {
-        $prev_expanded_line // '';
+        $repeat_expanded_line // '';
     } else {
         $line =~ s/^\s*(\w+)(.*)/expand_alias($1,$2) . $2/e;
         $line;
