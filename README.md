@@ -63,14 +63,14 @@ TODO
 
 - Customized completion, especially of breakpoints.
 
-You can report bugs and requests as GitHub issues, or send me email.
+Please report bugs and requests as GitHub issues, or send me email.
 
 Related Work
 ============
 
-Nobody seems interested in a simple command-line debugger for Java.  Here is
-a [Stack Overflow thread][stack] that seeks such a thing, without turning up
-any options.
+Nobody seems interested in a simple but usable command-line debugger for
+Java.  Here is a [Stack Overflow thread][stack] that seeks such a thing,
+without turning up any options.
 
 [stack]: http://stackoverflow.com/questions/370072/recomend-a-standalone-java-debugger
 
