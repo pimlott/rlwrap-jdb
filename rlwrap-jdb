@@ -1,4 +1,43 @@
-#!/bin/sh
+#!/usr/bin/perl -w
 
-dir="$(dirname $0)"
-rlwrap --histsize 5000 --command-name jdb --filter "$dir/rlwrap-jdb-filter" "$@"
+use strict;
+
+use FindBin;
+use Getopt::Long qw( :config pass_through require_order );
+
+sub usage {
+    my($status, @msg) = @_;
+    my $fh = $status == 0 ? \*STDOUT : \*STDERR;
+    print $fh @msg, "\n" if @msg;
+    print $fh <<EOF;
+Usage:
+  rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
+Run PROG with command-line editing as well as handy aliases, completion, and
+auto-repitition for jdb.  Note PROG doesn't have to be jdb; it could be an
+application startup script, a mvn exec:exe invocation, etc.
+
+Options:
+  --breakpoints-file F  File containing breakpoints for completion;
+                        generate with make-breakpoints.
+
+RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
+rlwrap options are given defaults:
+  --command-name jdb
+  --break-chars :
+  --histsize 5000
+EOF
+    exit($status);
+}
+
+my($breakpoints_file);
+GetOptions(
+    help            => sub { usage(0) },
+    'breakpoints-file:s' => \$breakpoints_file,
+) or usage(1);
+
+usage(1, 'PROG required') if @ARGV == 0;
+
+exec(qw( rlwrap --command-name jdb --break-chars : --histsize 5000 --filter ),
+    join(' ', "$FindBin::Bin/rlwrap-jdb-filter",
+        defined($breakpoints_file) ? $breakpoints_file : ()),
+    @ARGV) or die $!;
