@@ -79,10 +79,10 @@ Building
 Nothing to build.  You can just copy `rlwrap-jdb`, `rlwrap-jdb-filter`,
 and `list-java-breakpoints` into your `bin` directory.
 
-To run, you need Perl, and a few modules.  I think the only module that does
-not come bundled with Perl is `Archive::Zip`, which is only needed by
-`list-java-breakpoints`.  You can install it as `libarchive-zip-perl` on
-Debian-based systems.
+To run, you need rlwrap, Perl, and a few Perl modules.  I think the only
+module that does not come bundled with Perl is `Archive::Zip`, which is only
+needed by `list-java-breakpoints`.  You can install it as
+`libarchive-zip-perl` on Debian-based systems.
 
 Hacking
 =======
