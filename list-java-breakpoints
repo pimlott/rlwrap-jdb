@@ -24,35 +24,50 @@ GetOptions(
 ) or usage(1);
 
 my(@classpath) = split(':', $ENV{CLASSPATH});
-my @classes = map {
-    /^$/ ? () :
-    -d $_ ? do {
-        my $dir = $_;
-        my(@files);
-        find(sub { push(@files, $File::Find::name) if /\.class$/ }, $dir);
-        map { s/$dir\/?//; s/\.class$//; s/\//./g; $_ } @files
-    } :
-    -f $_ && /\.jar$/ ? do {
-        my $jar = $_;
-        my $zip = Archive::Zip->new($jar) or die;
-        map { s/\.class$//; s/\//./g; $_ }
-            grep { /\.class$/ } $zip->memberNames();
-    } : warn("unrecognized classpath entry $_\n");
-} @classpath;
-
-open JAVAP, '-|', qw( javap -p ), @classes or die $!;
-my(@breakpoints, $class);
-while (<JAVAP>) {
-    if      (/\bclass (\S+)/) {
-        $class = $1;
-    } elsif (/\b(\S+)\((.*?)\);/) {
-        my $method = $1;
-        my($args) = $2;
-        $args =~ s/ //g;
-        $method = '<init>' if $method eq $class;
-        push(@breakpoints, "$class.$method($args)");
-    }
-}
+my @classes = map { list_classes($_) } @classpath;
+my @breakpoints = list_breakpoints(@classes);
 foreach (sort(@breakpoints)) {
     print "$_\n";
+}
+exit;
+
+sub list_classes {
+    my($classpath_entry) = @_;
+    $classpath_entry =~ /^$/
+        ? () :
+    -d $classpath_entry
+        ? list_classes_dir($classpath_entry) :
+    -f $classpath_entry && $classpath_entry =~ /\.jar$/
+        ? list_classes_jar($classpath_entry)
+        : warn("unrecognized classpath entry: $classpath_entry\n");
+}
+sub list_classes_dir {
+    my($dir) = @_;
+    my(@files);
+    find(sub { push(@files, $File::Find::name) if /\.class$/ }, $dir);
+    map { s/$dir\/?//; s/\.class$//; s/\//./g; $_ } @files
+}
+sub list_classes_jar {
+    my($jar) = @_;
+    my $zip = Archive::Zip->new($jar) or die;
+    map { s/\.class$//; s/\//./g; $_ }
+        grep { /\.class$/ } $zip->memberNames();
+}
+
+sub list_breakpoints {
+    my(@classes) = @_;
+    open JAVAP, '-|', qw( javap -p ), @classes or die $!;
+    my(@breakpoints, $class);
+    while (<JAVAP>) {
+        if      (/\bclass (\S+)/) {
+            $class = $1;
+        } elsif (/\b(\S+)\((.*?)\);/) {
+            my $method = $1;
+            my($args) = $2;
+            $args =~ s/ //g;
+            $method = '<init>' if $method eq $class;
+            push(@breakpoints, "$class.$method($args)");
+        }
+    }
+    @breakpoints
 }
