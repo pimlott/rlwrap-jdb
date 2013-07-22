@@ -81,8 +81,8 @@ and `list-java-breakpoints` into your `bin` directory.
 
 To run, you need rlwrap, Perl, and a few Perl modules.  I think the only
 module that does not come bundled with Perl is `Archive::Zip`, which is only
-needed by `list-java-breakpoints`.  You can install it as
-`libarchive-zip-perl` on Debian-based systems.
+needed for looking into JARs in `list-java-breakpoints`.  You can install it
+as `libarchive-zip-perl` on Debian-based systems.
 
 Hacking
 =======

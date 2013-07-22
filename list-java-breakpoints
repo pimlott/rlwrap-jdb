@@ -2,7 +2,6 @@
 
 use strict;
 
-use Archive::Zip ();
 use File::Find qw( find );
 use Getopt::Long;
 
@@ -47,8 +46,16 @@ sub list_classes_dir {
     find(sub { push(@files, $File::Find::name) if /\.class$/ }, $dir);
     map { s/$dir\/?//; s/\.class$//; s/\//./g; $_ } @files
 }
+my $no_archive_zip;
 sub list_classes_jar {
     my($jar) = @_;
+    return if $no_archive_zip;
+    eval { require Archive::Zip };
+    if ($@ ne '') {
+        $no_archive_zip = 1;
+        warn "Skipping JARs; install the Archive::Zip Perl module to look into JARs.\n";
+        return;
+    }
     my $zip = Archive::Zip->new($jar) or die;
     map { s/\.class$//; s/\//./g; $_ }
         grep { /\.class$/ } $zip->memberNames();
