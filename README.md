@@ -1,4 +1,4 @@
-`rlwrap-jdb` is a rear-guard effort to make [jdb][jdb] almost usable.  It
+rlwrap-jdb is a rear-guard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
 history, but (using rlwrap's filter mechanism) handy aliases, command
 repetition, and breakpoint completion.
@@ -27,7 +27,7 @@ Usage
       --histsize 5000
 
 Within jdb, you can use use all normal commands with history and
-command-line editing.  In addition, `rlwrap-jdb` adds these aliases:
+command-line editing.  In addition, rlwrap-jdb adds these aliases:
 
     h               help (displays in a pager)
     b <breakpoint>  stop in or stop at, depending on <breakpoint> syntax
@@ -53,7 +53,7 @@ is repeated.
 Breakpoint completion
 ---------------------
 
-`rlwrap-jdb` can complete breakpoints.  You first need to run the included
+rlwrap-jdb can complete breakpoints.  You first need to run the included
 `list-java-breakpoints` with your `$CLASSPATH` environment variable set,
 saving the output to a file:
 
@@ -88,7 +88,7 @@ Hacking
 =======
 
 The magic lives in the rlwrap filter, `rlwrap-jdb-filter`, written in Perl
-and using the `RlwrapFilter` module, which comes with `rlwrap` and is
+and using the `RlwrapFilter` module, which comes with rlwrap and is
 well-documented.
 
 If you want to syntax check the filter with `perl -c`, copy
@@ -122,8 +122,8 @@ small and simple has its place too.
 License
 =======
 
-`rlwrap-jdb` is licensed under the GNU General Public License, version 2
-(the same license as `rlwrap`).
+rlwrap-jdb is licensed under the GNU General Public License, version 2
+(the same license as rlwrap).
 
 Author
 ======
