@@ -21,11 +21,12 @@ Options:
   --breakpoints-file F  File containing breakpoints for completion;
                         generate with list-java-breakpoints.
 
-RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
-rlwrap options are given defaults:
+RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Default
+rlwrap options:
   --command-name jdb
   --break-chars :
   --histsize 5000
+  --wait-before-prompt -40
 EOF
     exit($status);
 }
@@ -38,7 +39,10 @@ GetOptions(
 
 usage(1, 'PROG required') if @ARGV == 0;
 
-exec(qw( rlwrap --command-name jdb --break-chars : --histsize 5000 --filter ),
+exec(qw( rlwrap
+         --command-name jdb --break-chars : --histsize 5000
+         --wait-before-prompt -40
+         --filter ),
     join(' ', "$FindBin::Bin/rlwrap-jdb-filter",
         defined($breakpoints_file) ? $breakpoints_file : ()),
     @ARGV) or die $!;

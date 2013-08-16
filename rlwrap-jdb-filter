@@ -153,6 +153,7 @@ sub expand_alias {
     }
 }
 
+# this sends us the prompt too, unless in patient mode
 $filter->output_handler(sub {
     my($s) = @_;
     if (defined($pager_fd)) {
