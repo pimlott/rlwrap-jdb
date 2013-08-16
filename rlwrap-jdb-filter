@@ -9,7 +9,8 @@ use RlwrapFilter;
 my($breakpoints_file) = @ARGV;
 my(@breakpoints);
 if (defined($breakpoints_file)) {
-    open IN, '<', $breakpoints_file or die $!;
+    open IN, '<', $breakpoints_file
+        or die("Problem opening breakpoints-file $breakpoints_file: $!\n");
     while (<IN>) {
         chomp;
         push(@breakpoints, $_);

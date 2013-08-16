@@ -33,11 +33,16 @@ EOF
 
 my($breakpoints_file);
 GetOptions(
-    help            => sub { usage(0) },
-    'breakpoints-file:s' => \$breakpoints_file,
+    help                 => sub { usage(0) },
+    'breakpoints-file=s' => \$breakpoints_file,
 ) or usage(1);
 
 usage(1, 'PROG required') if @ARGV == 0;
+
+if (defined($breakpoints_file)) {
+    open my $fh, '<', $breakpoints_file
+        or die("Problem opening breakpoints-file $breakpoints_file: $!\n");
+}
 
 exec(qw( rlwrap
          --command-name jdb --break-chars : --histsize 5000
