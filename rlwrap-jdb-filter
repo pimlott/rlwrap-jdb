@@ -20,8 +20,6 @@ if (defined($breakpoints_file)) {
 my $filter = RlwrapFilter->new();
 my $name = $filter->name();
 
-my $x = 1;
-
 my($raw_line, $repeat_expanded_line, $pager_fd);
 
 $filter->input_handler(sub {
