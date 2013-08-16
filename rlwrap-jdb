@@ -44,10 +44,15 @@ if (defined($breakpoints_file)) {
         or die("Problem opening breakpoints-file $breakpoints_file: $!\n");
 }
 
-exec(qw( rlwrap
-         --command-name jdb --break-chars : --histsize 5000
-         --wait-before-prompt -40
-         --filter ),
-    join(' ', "$FindBin::Bin/rlwrap-jdb-filter",
-        defined($breakpoints_file) ? $breakpoints_file : ()),
-    @ARGV) or die $!;
+exec(
+    qw( rlwrap
+        --command-name jdb --break-chars : --histsize 5000
+        --wait-before-prompt -40
+        --filter ),
+    join(' ',
+        "$FindBin::Bin/rlwrap-jdb-filter",
+        defined($breakpoints_file)
+            ? ('--breakpoints-file', $breakpoints_file) : (),
+    ),
+    @ARGV)
+    or die $!;

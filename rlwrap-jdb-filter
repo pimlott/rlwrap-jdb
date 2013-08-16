@@ -3,10 +3,28 @@
 use strict;
 use warnings;
 
+use Getopt::Long;
+
 use lib ($ENV{RLWRAP_FILTERDIR} or '.');
 use RlwrapFilter;
 
-my($breakpoints_file) = @ARGV;
+my $filter = RlwrapFilter->new();
+my $name = $filter->name();
+
+my $usage = <<EOF;
+Usage:
+  rlwrap -z '$name [OPT]...' <command>
+Handy aliases, completion, and auto-repetition for jdb.
+Options:
+  --breakpoints-file F  File containing breakpoints for completion;
+                        generate with list-java-breakpoints.
+EOF
+
+my($breakpoints_file);
+GetOptions(
+    'breakpoints-file=s' => \$breakpoints_file,
+) or die("$usage\n");
+
 my(@breakpoints);
 if (defined($breakpoints_file)) {
     open IN, '<', $breakpoints_file
@@ -16,9 +34,6 @@ if (defined($breakpoints_file)) {
         push(@breakpoints, $_);
     }
 }
-
-my $filter = RlwrapFilter->new();
-my $name = $filter->name();
 
 my($raw_line, $repeat_expanded_line, $pager_fd);
 
@@ -171,9 +186,6 @@ $filter->prompt_handler(sub {
     $prompt;
 });
 
-$filter->help_text(<<EOF);
-Usage: rlwrap -z '$name BREAKPOINTS-FILE' <command>
-Handy aliases, completion, and auto-repetition for jdb.
-EOF
+$filter->help_text($usage);
 
 $filter->run();
