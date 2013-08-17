@@ -40,7 +40,7 @@ if (defined($breakpoints_file)) {
     }
 }
 
-my($raw_line, $repeat_expanded_line, $pager_fd);
+my($vm_running, $raw_line, $repeat_expanded_line, $pager_fd);
 my $current_class = $main_class;
 
 $filter->input_handler(sub {
@@ -51,6 +51,24 @@ $filter->input_handler(sub {
         if $expanded_line =~ /^\s*(?:next|step|step up|cont)\s*$/;
     if ($expanded_line =~ /^\s*(?:help|\?)\s*/) {
         open($pager_fd, '|-', 'less') or die $!;
+    } elsif ($expanded_line =~ /^\s*cont\s*$/) {
+        $expanded_line = 'run' if !$vm_running;
+    } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
+        if (!$vm_running) {
+            if (!defined($main_class)) {
+                print STDERR <<EOF;
+Don't know the main class to step into; try passing --main-class C.
+EOF
+                $expanded_line = '';
+            } else {
+                # RlwrapFilter doesn't expect us to return multiple
+                # lines, so this isn't handled ideally: "run" is
+                # echoed immediately.  Oh well.
+                $expanded_line = join("\n",
+                    "stop in $main_class.main(java.lang.String[])",
+                    'run');
+            }
+        }
     }
     $expanded_line;
 });
@@ -64,6 +82,7 @@ $filter->output_handler(sub {
         print $pager_fd $s;
         ''
     } else {
+        $vm_running = 1 if $s =~ /^VM Started:/m;
         # parse the current class
         if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=/) {
             $current_class = $1;
