@@ -49,7 +49,7 @@ $filter->input_handler(sub {
     my($expanded_line) = expand($line);
     $repeat_expanded_line = $expanded_line
         if $expanded_line =~ /^\s*(?:next|step|step up|cont)\s*$/;
-    if ($expanded_line =~ /^\s*help/) {
+    if ($expanded_line =~ /^\s*(?:help|\?)\s*/) {
         open($pager_fd, '|-', 'less') or die $!;
     }
     $expanded_line;
