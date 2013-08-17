@@ -51,6 +51,28 @@ $filter->input_handler(sub {
         if $expanded_line =~ /^\s*(?:next|step|step up|cont)\s*$/;
     if ($expanded_line =~ /^\s*(?:help|\?)\s*/) {
         open($pager_fd, '|-', 'less') or die $!;
+        print $pager_fd <<EOF;
+** rlwrap-jdb shortcuts **
+b <class id>.<method>[(argument_type,...)]
+                          -- set a breakpoint in a method
+b <class id>:<line>       -- set a breakpoint at a line
+d <breakpoint>            -- clear a breakpoint in a method or at a line
+B <breakpoint>            -- clear a breakpoint in a method or at a line
+s                         -- step (starts VM if not running)
+r                         -- step up
+n                         -- next (starts VM if not running)
+c                         -- cont (starts VM if not running)
+p <expr>                  -- print
+x <expr>                  -- dump
+bt                        -- where
+T                         -- where
+l [line number|method]    -- list
+h                         -- help
+q                         -- quit
+
+Hit return to repeat the last next, step, step up, or cont.
+
+EOF
     } elsif ($expanded_line =~ /^\s*cont\s*$/) {
         $expanded_line = 'run' if !$vm_running;
     } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
@@ -202,17 +224,18 @@ sub expand {
 my(%aliases);
 BEGIN {
     %aliases = (
-        h  => 'help',
+        d  => 'clear',
         B  => 'clear',
-        r  => 'run',
-        n  => 'next',
         s  => 'step',
         r  => 'step up',
+        n  => 'next',
         c  => 'cont',
         p  => 'print',
-        d  => 'dump',
+        x  => 'dump',
         bt => 'where',
+        T  => 'where',
         l  => 'list',
+        h  => 'help',
         q  => 'quit',
     );
 }
