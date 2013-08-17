@@ -40,7 +40,8 @@ if (defined($breakpoints_file)) {
     }
 }
 
-my($vm_running, $raw_line, $repeat_expanded_line, $pager_fd);
+my($vm_running, $raw_line, $pager_fd);
+my $repeat_expanded_line = 'cont';
 my $current_class = $main_class;
 
 $filter->input_handler(sub {
