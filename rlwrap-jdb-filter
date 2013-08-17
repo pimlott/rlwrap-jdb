@@ -22,6 +22,8 @@ Options:
                         rlwrap-jdb can often figure it out itself.
 EOF
 
+$filter->help_text($usage);
+
 my($breakpoints_file, $main_class);
 GetOptions(
     'breakpoints-file=s' => \$breakpoints_file,
@@ -52,7 +54,32 @@ $filter->input_handler(sub {
     }
     $expanded_line;
 });
+
 $filter->echo_handler(sub { $raw_line });
+
+# this sends us the prompt too, unless in patient mode
+$filter->output_handler(sub {
+    my($s) = @_;
+    if (defined($pager_fd)) {
+        print $pager_fd $s;
+        ''
+    } else {
+        # parse the current class
+        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=/) {
+            $current_class = $1;
+        }
+        $s;
+    }
+});
+
+$filter->prompt_handler(sub {
+    my($prompt) = @_;
+    if (defined($pager_fd)) {
+        close($pager_fd) or die $!;
+        $pager_fd = undef;
+    }
+    $prompt;
+});
 
 $filter->completion_handler(sub {
     my($l, $prefix, @completions) = @_;
@@ -70,6 +97,9 @@ $filter->completion_handler(sub {
     }
     @completions;
 });
+
+$filter->run();
+exit;
 
 sub breakpoint_completions {
     my($breakpoints, $prefix) = @_;
@@ -150,20 +180,23 @@ sub expand {
     }
 }
 
-my(%aliases) = (
-    h  => 'help',
-    B  => 'clear',
-    r  => 'run',
-    n  => 'next',
-    s  => 'step',
-    r  => 'step up',
-    c  => 'cont',
-    p  => 'print',
-    d  => 'dump',
-    bt => 'where',
-    l  => 'list',
-    q  => 'quit',
-);
+my(%aliases);
+BEGIN {
+    %aliases = (
+        h  => 'help',
+        B  => 'clear',
+        r  => 'run',
+        n  => 'next',
+        s  => 'step',
+        r  => 'step up',
+        c  => 'cont',
+        p  => 'print',
+        d  => 'dump',
+        bt => 'where',
+        l  => 'list',
+        q  => 'quit',
+    );
+}
 sub expand_alias {
     my($s, $r) = @_;
     if ($s eq 'b') {
@@ -176,30 +209,3 @@ sub expand_alias {
         $aliases{$s} // $s;
     }
 }
-
-# this sends us the prompt too, unless in patient mode
-$filter->output_handler(sub {
-    my($s) = @_;
-    if (defined($pager_fd)) {
-        print $pager_fd $s;
-        ''
-    } else {
-        # parse the current class
-        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=/) {
-            $current_class = $1;
-        }
-        $s;
-    }
-});
-$filter->prompt_handler(sub {
-    my($prompt) = @_;
-    if (defined($pager_fd)) {
-        close($pager_fd) or die $!;
-        $pager_fd = undef;
-    }
-    $prompt;
-});
-
-$filter->help_text($usage);
-
-$filter->run();
