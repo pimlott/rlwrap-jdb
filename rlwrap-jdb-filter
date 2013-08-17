@@ -40,7 +40,7 @@ if (defined($breakpoints_file)) {
     }
 }
 
-my($vm_running, $raw_line, $pager_fd);
+my($vm_running, $current_line, $raw_line, $pager_fd);
 my $repeat_expanded_line = 'cont';
 my $current_class = $main_class;
 
@@ -57,6 +57,7 @@ $filter->input_handler(sub {
 b <class id>.<method>[(argument_type,...)]
                           -- set a breakpoint in a method
 b <class id>:<line>       -- set a breakpoint at a line
+b                         -- set a breakpoint at the current line
 d <breakpoint>            -- clear a breakpoint in a method or at a line
 B <breakpoint>            -- clear a breakpoint in a method or at a line
 s                         -- step (starts VM if not running)
@@ -107,8 +108,9 @@ $filter->output_handler(sub {
     } else {
         $vm_running = 1 if $s =~ /^VM Started:/m;
         # parse the current class
-        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=/) {
+        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=(\d+)/) {
             $current_class = $1;
+            $current_line = $2;
         }
         $s;
     }
@@ -243,6 +245,12 @@ BEGIN {
 sub expand_alias {
     my($s, $r) = @_;
     if ($s eq 'b') {
+        $r =~ /^\s*$/
+            ? defined($current_line)
+                ? "stop at $current_class:$current_line"
+                : do { print STDERR <<EOF; '' } :
+No current line to set breakpoint at.
+EOF
         $r =~ /:/
             ? 'stop at'
             : 'stop in';
