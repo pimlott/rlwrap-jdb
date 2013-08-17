@@ -1,4 +1,4 @@
-rlwrap-jdb is a rear-guard effort to make [jdb][jdb] almost usable.  It
+rlwrap-jdb is a rearguard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
 history, but (using rlwrap's filter mechanism) handy aliases, command
 repetition, and breakpoint completion.
@@ -19,36 +19,41 @@ Usage
     Options:
       --breakpoints-file F  File containing breakpoints for completion;
                             generate with list-java-breakpoints.
+      --main-class C        The main class to debug.  This is not essential, and
+                            rlwrap-jdb can often figure it out itself.
 
-    RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Some
-    rlwrap options are given defaults:
+    RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Default
+    rlwrap options:
       --command-name jdb
       --break-chars :
       --histsize 5000
+      --wait-before-prompt -40
 
 Within jdb, you can use use all normal commands with history and
-command-line editing.  In addition, rlwrap-jdb adds these aliases:
+command-line editing.  In addition, rlwrap-jdb adds these aliases (also in
+the on-line help):
 
-    h               help (displays in a pager)
-    b <breakpoint>  stop in or stop at, depending on <breakpoint> syntax
-    b               clear (list breakpoints)
-    B               clear (list or delete breakpoints)
-    r               run
-    n               next
-    s               step
-    r               step up
-    c               cont
-    p               print
-    d               dump
-    bt              where
-    l               list
-    q               quit
+    b <class id>.<method>[(argument_type,...)]
+                              -- set a breakpoint in a method
+    b <class id>:<line>       -- set a breakpoint at a line
+    b                         -- set a breakpoint at the current line
+    d <breakpoint>            -- clear a breakpoint in a method or at a line
+    B <breakpoint>            -- clear a breakpoint in a method or at a line
+    s                         -- step (starts VM if not running)
+    r                         -- step up
+    n                         -- next (starts VM if not running)
+    c                         -- cont (starts VM if not running)
+    p <expr>                  -- print
+    x <expr>                  -- dump
+    bt                        -- where
+    T                         -- where
+    l [line number|method]    -- list
+    h                         -- help
+    q                         -- quit
 
-Generally, the aliases are inspired by `gdb`, with some influence from
-Perl's debugger.
+    Hit return to repeat the last next, step, step up, or cont.
 
-If you just hit return, the last `next`, `step`, `step up` or `cont` command
-is repeated.
+The aliases are inspired by `gdb` and the Perl debugger.
 
 Breakpoint completion
 ---------------------
@@ -103,7 +108,9 @@ TODO
 
 - Partial completion of breakpoints (probably requires deeper integration
   into readline).
-- More customized completions.
+- More completions, eg. for clearing breakpoints.
+- Option to automatically find breakpoints at run-time.
+- Replay a session.
 
 Please report bugs and requests as GitHub issues, or send me email.
 
