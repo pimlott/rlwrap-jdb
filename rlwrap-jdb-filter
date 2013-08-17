@@ -243,8 +243,6 @@ BEGIN {
 sub expand_alias {
     my($s, $r) = @_;
     if ($s eq 'b') {
-        $r =~ /^\s*$/
-            ? 'clear' :
         $r =~ /:/
             ? 'stop at'
             : 'stop in';
