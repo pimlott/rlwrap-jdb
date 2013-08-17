@@ -70,6 +70,7 @@ sub list_breakpoints {
     while (<JAVAP>) {
         if      (/\bclass (\S+)/) {
             $class = $1;
+            push(@breakpoints, "$class:");
         } elsif (/\b(\S+)\((.*?)\);/) {
             my $method = $1;
             my($args) = $2;

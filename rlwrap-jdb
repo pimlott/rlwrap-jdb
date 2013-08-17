@@ -20,6 +20,8 @@ invocation, etc. that eventually calls jdb.
 Options:
   --breakpoints-file F  File containing breakpoints for completion;
                         generate with list-java-breakpoints.
+  --main-class C        The main class to debug.  This is not essential, and
+                        rlwrap-jdb can often figure it out itself.
 
 RLWRAP-OPTs must be specified ofter OPTs, and are passed to rlwrap.  Default
 rlwrap options:
@@ -31,10 +33,11 @@ EOF
     exit($status);
 }
 
-my($breakpoints_file);
+my($breakpoints_file, $main_class);
 GetOptions(
     help                 => sub { usage(0) },
     'breakpoints-file=s' => \$breakpoints_file,
+    'main-class=s'       => \$main_class,
 ) or usage(1);
 
 usage(1, 'PROG required') if @ARGV == 0;
@@ -42,6 +45,18 @@ usage(1, 'PROG required') if @ARGV == 0;
 if (defined($breakpoints_file)) {
     open my $fh, '<', $breakpoints_file
         or die("Problem opening breakpoints-file $breakpoints_file: $!\n");
+}
+
+if (!defined($main_class)) {
+    # Heuristically try to identify the main class.
+    foreach my $arg (@ARGV) {
+        next unless $arg =~ /^[a-zA-Z.\$]+$/;
+        my(@parts) = split(/\./, $arg);
+        if ($parts[$#parts] =~ /^[A-Z]/) {
+            $main_class = $arg;
+            last;
+        }
+    }
 }
 
 exec(
@@ -53,6 +68,8 @@ exec(
         "$FindBin::Bin/rlwrap-jdb-filter",
         defined($breakpoints_file)
             ? ('--breakpoints-file', $breakpoints_file) : (),
+        defined($main_class)
+            ? ('--main-class', $main_class) : (),
     ),
     @ARGV)
     or die $!;

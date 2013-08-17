@@ -18,11 +18,14 @@ Handy aliases, completion, and auto-repetition for jdb.
 Options:
   --breakpoints-file F  File containing breakpoints for completion;
                         generate with list-java-breakpoints.
+  --main-class C        The main class to debug.  This is not essential, and
+                        rlwrap-jdb can often figure it out itself.
 EOF
 
-my($breakpoints_file);
+my($breakpoints_file, $main_class);
 GetOptions(
     'breakpoints-file=s' => \$breakpoints_file,
+    'main-class=s'       => \$main_class,
 ) or die("$usage\n");
 
 my(@breakpoints);
@@ -36,6 +39,7 @@ if (defined($breakpoints_file)) {
 }
 
 my($raw_line, $repeat_expanded_line, $pager_fd);
+my $current_class = $main_class;
 
 $filter->input_handler(sub {
     my($line) = @_;
@@ -52,10 +56,16 @@ $filter->echo_handler(sub { $raw_line });
 
 $filter->completion_handler(sub {
     my($l, $prefix, @completions) = @_;
-    if ($l =~ /^\s*(?:b|stop at|stop in)\s+(\S+)/) {
-        # try to check that they are completing in the break arg
-        if ($prefix eq $1) {
-            push(@completions, breakpoint_completions(\@breakpoints, $prefix));
+    # try to check that they are completing in the break arg
+    if ($l =~ /^\s*(?:b|stop at|stop in)\s+(\S*)/) {
+        my $break_arg = $1;
+        if ($prefix eq $break_arg) {
+            push(@completions,
+                $prefix eq ''
+                    ? defined($current_class)
+                        ? breakpoint_completions(\@breakpoints, $current_class)
+                        : ()
+                    : breakpoint_completions(\@breakpoints, $prefix));
         }
     }
     @completions;
@@ -174,6 +184,10 @@ $filter->output_handler(sub {
         print $pager_fd $s;
         ''
     } else {
+        # parse the current class
+        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=/) {
+            $current_class = $1;
+        }
         $s;
     }
 });
