@@ -95,10 +95,9 @@ EOF
     } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
         if (!$vm_running) {
             if (!defined($main_class)) {
-                print STDERR <<EOF;
+                $expanded_line = command_error(<<EOF);
 Don't know the main class to step into; try passing --main-class C.
 EOF
-                $expanded_line = '';
             } else {
                 $expanded_line = multiple_commands(
                     "stop in $main_class.main(java.lang.String[])",
@@ -122,6 +121,13 @@ sub multiple_commands {
         $output
     } @_;
     $final_command;
+}
+
+sub command_error {
+    my($err) = @_;
+    chomp($err);
+    @extra_command_output = ($err);
+    ''
 }
 
 $filter->echo_handler(sub {
@@ -279,9 +285,7 @@ sub expand_alias {
         $r =~ /^\s*$/
             ? defined($current_line)
                 ? "stop at $current_class:$current_line"
-                : do { print STDERR <<EOF; '' } :
-No current line to set breakpoint at.
-EOF
+                : command_error('No current line to set breakpoint at.') :
         $r =~ /:/
             ? 'stop at'
             : 'stop in';
