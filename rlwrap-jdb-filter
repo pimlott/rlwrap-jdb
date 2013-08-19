@@ -109,14 +109,26 @@ EOF
     $expanded_line;
 });
 
-# RlwrapFilter doesn't expect us to return multiple
-# lines, so this isn't handled ideally: "run" is
-# echoed immediately.  Oh well.
+my @extra_command_output;
+
+# Simply returning multiple newline-separated commands isn't handled ideally
+# by RlwrapFilter: all after the first are echoed immediately.  Work around
+# it with cloak_and_dagger and take care of printing the output ourselves.
 sub multiple_commands {
-    join("\n", @_);
+    my $final_command = pop(@_);
+    @extra_command_output = map {
+        my $output = $filter->cloak_and_dagger($_, ' ', 40);
+        $output =~ s/\n[^\n]+\Z//;
+        $output
+    } @_;
+    $final_command;
 }
 
-$filter->echo_handler(sub { $raw_line });
+$filter->echo_handler(sub {
+    my $r = join("\n", $raw_line, @extra_command_output);
+    @extra_command_output = ();
+    $r
+});
 
 # this sends us the prompt too, unless in patient mode
 $filter->output_handler(sub {
