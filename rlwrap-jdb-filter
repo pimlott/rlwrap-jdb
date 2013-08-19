@@ -100,10 +100,7 @@ Don't know the main class to step into; try passing --main-class C.
 EOF
                 $expanded_line = '';
             } else {
-                # RlwrapFilter doesn't expect us to return multiple
-                # lines, so this isn't handled ideally: "run" is
-                # echoed immediately.  Oh well.
-                $expanded_line = join("\n",
+                $expanded_line = multiple_commands(
                     "stop in $main_class.main(java.lang.String[])",
                     'run');
             }
@@ -111,6 +108,13 @@ EOF
     }
     $expanded_line;
 });
+
+# RlwrapFilter doesn't expect us to return multiple
+# lines, so this isn't handled ideally: "run" is
+# echoed immediately.  Oh well.
+sub multiple_commands {
+    join("\n", @_);
+}
 
 $filter->echo_handler(sub { $raw_line });
 
