@@ -42,23 +42,6 @@ GetOptions(
 
 usage(1, 'PROG required') if @ARGV == 0;
 
-if (defined($breakpoints_file)) {
-    open my $fh, '<', $breakpoints_file
-        or die("Problem opening breakpoints-file $breakpoints_file: $!\n");
-}
-
-if (!defined($main_class)) {
-    # Heuristically try to identify the main class.
-    foreach my $arg (@ARGV) {
-        next unless $arg =~ /^[a-zA-Z.\$]+$/;
-        my(@parts) = split(/\./, $arg);
-        if ($parts[$#parts] =~ /^[A-Z]/) {
-            $main_class = $arg;
-            last;
-        }
-    }
-}
-
 exec(
     qw( rlwrap
         --command-name jdb --break-chars : --histsize 5000

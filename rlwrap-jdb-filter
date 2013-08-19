@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+# Although meant to be called via rlwrap-jdb, this filter should still work
+# on its own with all features.
+
 use strict;
 use warnings;
 
@@ -19,7 +22,7 @@ Options:
   --breakpoints-file F  File containing breakpoints for completion;
                         generate with list-java-breakpoints.
   --main-class C        The main class to debug.  This is not essential, and
-                        rlwrap-jdb can often figure it out itself.
+                        $name can often figure it out itself.
 EOF
 
 $filter->help_text($usage);
@@ -37,6 +40,18 @@ if (defined($breakpoints_file)) {
     while (<IN>) {
         chomp;
         push(@breakpoints, $_);
+    }
+}
+
+if (!defined($main_class)) {
+    # Heuristically try to identify the main class.
+    foreach my $arg ($filter->command_line) {
+        next unless $arg =~ /^[a-zA-Z.\$]+$/;
+        my(@parts) = split(/\./, $arg);
+        if ($parts[$#parts] =~ /^[A-Z]/) {
+            $main_class = $arg;
+            last;
+        }
     }
 }
 
