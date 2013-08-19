@@ -1,6 +1,6 @@
 rlwrap-jdb is a rearguard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
-history, but (using rlwrap's filter mechanism) handy aliases, command
+history, but (using rlwrap's nifty filter mechanism) handy aliases, command
 repetition, and breakpoint completion.
 
 [jdb]: http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/jdb.html
@@ -13,7 +13,7 @@ Usage
       rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
     Run PROG with command-line editing and history as well as handy aliases,
     command repetition, and breakpoint completion for jdb.  Note PROG doesn't
-    have to be jdb; it could be an application startup script, a mvn exec:exe
+    have to be jdb; it could be an application startup script, a mvn exec:exec
     invocation, etc. that eventually calls jdb.
 
     Options:
@@ -101,7 +101,7 @@ If you want to syntax check the filter with `perl -c`, copy
 However, you will run across the problem that `RlwrapFilter` hijacks the
 error hooks.  I suggest applying `RlwrapFilter.pm.patch` to the local copy.
 This is only for development, and there is no reason to modify the installed
-``RlwrapFilter.pm`.
+`RlwrapFilter.pm`.
 
 TODO
 ====

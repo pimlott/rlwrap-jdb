@@ -14,7 +14,7 @@ Usage:
   rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
 Run PROG with command-line editing and history as well as handy aliases,
 command repetition, and breakpoint completion for jdb.  Note PROG doesn't
-have to be jdb; it could be an application startup script, a mvn exec:exe
+have to be jdb; it could be an application startup script, a mvn exec:exec
 invocation, etc. that eventually calls jdb.
 
 Options:
