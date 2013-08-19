@@ -34,13 +34,13 @@ exit;
 
 sub list_classes {
     my($classpath_entry) = @_;
-    $classpath_entry =~ /^$/
+    $classpath_entry =~ /^$/ || ! -e $classpath_entry
         ? () :
     -d $classpath_entry
         ? list_classes_dir($classpath_entry) :
     -f $classpath_entry && $classpath_entry =~ /\.jar$/
         ? list_classes_jar($classpath_entry)
-        : warn("unrecognized classpath entry: $classpath_entry\n");
+        : do { warn("unrecognized classpath entry: $classpath_entry\n"); () };
 }
 sub list_classes_dir {
     my($dir) = @_;
