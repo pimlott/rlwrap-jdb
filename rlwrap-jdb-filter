@@ -244,17 +244,6 @@ sub breakpoints_search {
     undef;
 }
 
-sub common_prefix {
-    my($a, $b) = @_;
-    my $i = 0;
-    while (1) {
-        return substr($a, 0, $i)
-            if $i>=length($a) || $i>=length($b) ||
-                substr($a, $i, 1) ne substr($b, $i, 1);
-        $i++;
-    }
-}
-
 sub uniq {
     my(@r, $last);
     foreach (@_) {
