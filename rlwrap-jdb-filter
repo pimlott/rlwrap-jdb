@@ -174,8 +174,12 @@ $filter->prompt_handler(sub {
 
 $filter->completion_handler(sub {
     my($l, $prefix, @completions) = @_;
-    # try to check that they are completing in the break arg
-    if ($l =~ /^\s*(?:b|stop at|stop in)\s+(\S*)/) {
+    if ($l =~ /^\s*(?:p|print|x|dump)\s+(\S*)/) {
+        push(@completions, prefix_filter($prefix, get_locals()));
+        push(@completions, prefix_filter($prefix, get_fields($current_class)))
+            if defined($current_class);
+    } elsif ($l =~ /^\s*(?:b|stop at|stop in)\s+(\S*)/) {
+        # try to check that they are completing in the break arg
         my $break_arg = $1;
         if ($prefix eq $break_arg) {
             push(@completions,
@@ -302,6 +306,28 @@ sub expand_alias {
     } else {
         $aliases{$s} // $s;
     }
+}
+
+sub prefix_filter {
+    my($prefix, @ss) = @_;
+    grep { substr($_, 0, length($prefix)) eq $prefix; } @ss;
+}
+
+sub get_locals {
+    parse_locals(cloak_and_dagger('locals'));
+}
+sub parse_locals {
+    my($s) = @_;
+    $s =~ /^(\w+) = /mg;
+}
+
+sub get_fields {
+    my($class) = @_;
+    parse_fields(cloak_and_dagger("fields $class"));
+}
+sub parse_fields {
+    my($s) = @_;
+    $s =~ /^[a-zA-Z_.]+ (\w+)/mg;
 }
 
 # Work around awkwardness in how ->cloak_and_dagger handles prompts.
