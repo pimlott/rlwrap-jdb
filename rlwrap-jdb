@@ -18,8 +18,10 @@ have to be jdb; it could be an application startup script, a mvn exec:exec
 invocation, etc. that eventually calls jdb.
 
 Options:
-  --breakpoints-file F  File containing breakpoints for completion;
-                        generate with list-java-breakpoints.
+  --find-breakpoints    Find breakpoints for completion at start-up, and
+                        CLASSPATH must be available.
+  --breakpoints-file F  File containing breakpoints, generated with
+                        list-java-breakpoints or --find-breakpoints.
   --main-class C        The main class to debug.  This is not essential, and
                         rlwrap-jdb can often figure it out itself.
 
@@ -33,9 +35,10 @@ EOF
     exit($status);
 }
 
-my($breakpoints_file, $main_class);
+my($find_breakpoints, $breakpoints_file, $main_class);
 GetOptions(
     help                 => sub { usage(0) },
+    'find-breakpoints'   => \$find_breakpoints,
     'breakpoints-file=s' => \$breakpoints_file,
     'main-class=s'       => \$main_class,
 ) or usage(1);
@@ -49,6 +52,7 @@ exec(
         --filter ),
     join(' ',
         "$FindBin::Bin/rlwrap-jdb-filter",
+        $find_breakpoints ? ('--find-breakpoints') : (),
         defined($breakpoints_file)
             ? ('--breakpoints-file', $breakpoints_file) : (),
         defined($main_class)
