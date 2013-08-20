@@ -153,12 +153,7 @@ $filter->output_handler(sub {
         print $pager_fd $s;
         ''
     } else {
-        $vm_running = 1 if $s =~ /^VM Started:/m;
-        # parse the current class
-        if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=(\d+)/) {
-            $current_class = $1;
-            $current_line = $2;
-        }
+        parse_output($s);
         $s;
     }
 });
@@ -168,9 +163,24 @@ $filter->prompt_handler(sub {
     if (defined($pager_fd)) {
         close($pager_fd) or die $!;
         $pager_fd = undef;
+    } else {
+        parse_output($prompt);
     }
     $prompt;
 });
+
+# jdb is pretty stupid and sometimes outputs things like "VM Started :"
+# without printing a new prompt, so rlwrap thinks that's the prompt.  So we
+# parse both output and prompts.
+sub parse_output {
+    my($s) = @_;
+    $vm_running = 1 if $s =~ /^VM Started:/m;
+    # parse the current class
+    if ($s =~ /: "thread=.*?", ([a-zA-Z.\$]+)\.[a-zA-Z]+\(\), line=(\d+)/) {
+        $current_class = $1;
+        $current_line = $2;
+    }
+}
 
 $filter->completion_handler(sub {
     my($l, $prefix, @completions) = @_;
