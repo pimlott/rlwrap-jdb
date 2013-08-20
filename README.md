@@ -1,7 +1,7 @@
 rlwrap-jdb is a rearguard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
 history, but (using rlwrap's nifty filter mechanism) handy aliases, command
-repetition, and breakpoint completion.
+repetition, and completion of breakpoints and variables.
 
 [jdb]: http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/jdb.html
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
@@ -12,13 +12,15 @@ Usage
     Usage:
       rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
     Run PROG with command-line editing and history as well as handy aliases,
-    command repetition, and breakpoint completion for jdb.  Note PROG doesn't
-    have to be jdb; it could be an application startup script, a mvn exec:exec
-    invocation, etc. that eventually calls jdb.
+    command repetition, and completion for jdb.  Note PROG doesn't have to be
+    jdb; it could be an application startup script, a mvn exec:exec invocation,
+    etc. that eventually calls jdb.
 
     Options:
-      --breakpoints-file F  File containing breakpoints for completion;
-                            generate with list-java-breakpoints.
+      --find-breakpoints    Find breakpoints for completion, saving to
+                            --breakpoints-file if given.  CLASSPATH must be set.
+      --breakpoints-file F  File containing breakpoints, generated with
+                            list-java-breakpoints or --find-breakpoints.
       --main-class C        The main class to debug.  This is not essential, and
                             rlwrap-jdb can often figure it out itself.
 
@@ -53,22 +55,33 @@ the on-line help):
 
     Hit return to repeat the last next, step, step up, or cont.
 
-The aliases are inspired by `gdb` and the Perl debugger.
+The aliases are inspired by gdb and the Perl debugger.
 
-Breakpoint completion
----------------------
+Completion
+----------
 
-rlwrap-jdb can complete breakpoints.  You first need to run the included
-`list-java-breakpoints` with your `$CLASSPATH` environment variable set,
-saving the output to a file:
+rlwrap-jdb can complete variable names (method arguments, locals, and
+fields) in the `print` and `dump` commands, and breakpoints in the `stop`
+commands.
+
+For breakpoint completion, either pass `--find-breakpoints` to rlwrap-jdb,
+or generate a breakpoints file ahead of time by running
+`list-java-breakpoints` and passing the file to rlwrap-jdb with
+`--breakpoints-file F`.  Either way, ensure that the `$CLASSPATH`
+environment variable includes all the classes for which you want
+breakpoints.  Examples:
+
+    CLASSPATH=... rlwrap-jdb --find-breakpoints jdb C
 
     CLASSPATH=... list-java-breakpoints > breakpoints-file
+    rlwrap-jdb --breakpoints-file breakpoints-file run-my-app
 
-Then, pass `--breakpoints-file breakpoints-file` to `rlwrap-jdb`.
+You may prefer to generate the breakpoints file ahead of time if there are a
+lot of classes to scan.
 
-The support is not ideal, because the completion list may be too long (eg.,
-if you type `b com<TAB>` you will get all methods under the `com` package).
-I am looking for a way to support partial completion.
+Breakpoint completion is not ideal, because the completion list may be too
+long (eg., if you type `b com<TAB>` you will get all methods under the `com`
+package).  I am looking for a way to support partial completion.
 
 I also recommend adding to your `~/.inputrc`:
 
@@ -76,7 +89,8 @@ I also recommend adding to your `~/.inputrc`:
         set show-all-if-unmodified On
     $endif
 
-This avoids needing to hit tab twice to get completions.
+This avoids needing to hit tab twice to get completions.  (You can get rid
+of the `$if`/`$endif` if you want this for all applications.)
 
 Building
 ========
@@ -86,8 +100,8 @@ and `list-java-breakpoints` into your `bin` directory.
 
 To run, you need rlwrap, Perl, and a few Perl modules.  I think the only
 module that does not come bundled with Perl is `Archive::Zip`, which is only
-needed for looking into JARs in `list-java-breakpoints`.  You can install it
-as `libarchive-zip-perl` on Debian-based systems.
+needed for finding breakpoints in JARs.  You can install it as
+`libarchive-zip-perl` on Debian-based systems.
 
 Hacking
 =======
@@ -108,8 +122,8 @@ TODO
 
 - Partial completion of breakpoints (probably requires deeper integration
   into readline).
+- Allow multiple breakpoints files.
 - More completions, eg. for clearing breakpoints.
-- Option to automatically find breakpoints at run-time.
 - Replay a session.
 
 Please report bugs and requests as GitHub issues, or send me email.

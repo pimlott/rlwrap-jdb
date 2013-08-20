@@ -13,13 +13,13 @@ sub usage {
 Usage:
   rlwrap-jdb [OPT]... [RLWRAP-OPT]... PROG [ARG]...
 Run PROG with command-line editing and history as well as handy aliases,
-command repetition, and breakpoint completion for jdb.  Note PROG doesn't
-have to be jdb; it could be an application startup script, a mvn exec:exec
-invocation, etc. that eventually calls jdb.
+command repetition, and completion for jdb.  Note PROG doesn't have to be
+jdb; it could be an application startup script, a mvn exec:exec invocation,
+etc. that eventually calls jdb.
 
 Options:
-  --find-breakpoints    Find breakpoints for completion at start-up, and
-                        CLASSPATH must be available.
+  --find-breakpoints    Find breakpoints for completion, saving to
+                        --breakpoints-file if given.  CLASSPATH must be set.
   --breakpoints-file F  File containing breakpoints, generated with
                         list-java-breakpoints or --find-breakpoints.
   --main-class C        The main class to debug.  This is not essential, and

@@ -18,10 +18,10 @@ my $name = $filter->name();
 my $usage = <<EOF;
 Usage:
   rlwrap -z '$name [OPT]...' <command>
-Handy aliases, completion, and auto-repetition for jdb.
+Handy aliases, command repetition, and completion for jdb.
 Options:
-  --find-breakpoints    Find breakpoints for completion at start-up, and
-                        CLASSPATH must be available.
+  --find-breakpoints    Find breakpoints for completion, saving to
+                        --breakpoints-file if given.  CLASSPATH must be set.
   --breakpoints-file F  File containing breakpoints, generated with
                         list-java-breakpoints or --find-breakpoints.
   --main-class C        The main class to debug.  This is not essential, and
