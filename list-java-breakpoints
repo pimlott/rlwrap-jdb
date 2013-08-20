@@ -12,8 +12,8 @@ sub usage {
     print $fh <<EOF;
 Usage:
   list-java-breakpoints
-Scan the CLASSPATH for breakpoints, writing them to STDOUT in a form that
-is understood by rlwrap-jdb.
+Scan the CLASSPATH (default: current directory) for breakpoints, writing
+them to STDOUT in a form understood by rlwrap-jdb --breakpoints-file.
 EOF
     exit($status);
 }
@@ -22,9 +22,7 @@ GetOptions(
     help            => sub { usage(0) },
 ) or usage(1);
 
-usage(1, "CLASSPATH environment variable not set") if !defined($ENV{CLASSPATH});
-
-my(@classpath) = split(':', $ENV{CLASSPATH});
+my(@classpath) = split(':', $ENV{CLASSPATH} // '.');
 my @classes = map { list_classes($_) } @classpath;
 my @breakpoints = list_breakpoints(@classes);
 foreach (sort(@breakpoints)) {
