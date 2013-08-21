@@ -61,8 +61,10 @@ Completion
 ----------
 
 rlwrap-jdb can complete variable names (method arguments, locals, and
-fields) in the `print` and `dump` commands, and breakpoints in the `stop`
-commands.
+fields) in the `p` (`print`) and `x` (`dump`) commands, and breakpoints in
+the `b` (`stop`) commands.  If you hit tab before starting to type the
+breakpoint, it will complete to the current class, making it easy to break
+within the same class.
 
 For breakpoint completion, either pass `--find-breakpoints` to rlwrap-jdb,
 or generate a breakpoints file ahead of time by running
