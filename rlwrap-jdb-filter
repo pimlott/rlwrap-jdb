@@ -269,16 +269,6 @@ sub breakpoints_search {
     undef;
 }
 
-sub uniq {
-    my(@r, $last);
-    foreach (@_) {
-        next if defined($last) && $_ eq $last;
-        push(@r, $_);
-        $last = $_;
-    }
-    @r
-}
-
 sub expand {
     my($line) = @_;
     if ($line =~ /^\s*$/) {
