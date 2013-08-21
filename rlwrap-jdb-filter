@@ -334,5 +334,6 @@ sub cloak_and_dagger {
     my($cmd) = @_;
     my $output = $filter->cloak_and_dagger($cmd, ' ', 40);
     $output =~ s/^[^\n]+\Z//m;
+    parse_output($output);
     $output
 }
