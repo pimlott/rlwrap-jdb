@@ -123,27 +123,36 @@ EOF
     $expanded_line;
 });
 
-my @extra_command_output;
+# used by command_error and multiple_commands, when we need to control what
+# is printed after the normal echo.  They are subs so we can stream.
+my @command_output_subs;
 
 # Simply returning multiple newline-separated commands isn't handled ideally
 # by RlwrapFilter: all after the first are echoed immediately.  Work around
 # it with cloak_and_dagger and take care of printing the output ourselves.
 sub multiple_commands {
-    my $final_command = pop(@_);
-    @extra_command_output = map { cloak_and_dagger($_) } @_;
-    $final_command;
+    @command_output_subs = map {
+        my $cmd = $_;
+        sub { cloak_and_dagger($cmd) }
+    } @_;
+    ''
 }
 
 sub command_error {
     my($err) = @_;
-    @extra_command_output = ($err);
+    @command_output_subs = (sub { $err });
     ''
 }
 
 $filter->echo_handler(sub {
-    my $r = join("\n", $raw_line, map { chomp; $_ } @extra_command_output);
-    @extra_command_output = ();
-    $r
+    $filter->send_output_oob("$raw_line");
+    foreach (@command_output_subs) {
+        my $r = $_->();
+        chomp($r);
+        $filter->send_output_oob("\n$r");
+    }
+    @command_output_subs = ();
+    ''
 });
 
 # this sends us the prompt too, unless in patient mode
