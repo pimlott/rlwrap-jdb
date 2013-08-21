@@ -158,20 +158,26 @@ $filter->output_handler(sub {
     }
 });
 
+# jdb is pretty stupid and sometimes outputs things like "VM Started:"
+# without printing a new prompt, so rlwrap thinks that's the prompt.  So we
+# check to see whether it looks like a prompt and if not treat it like
+# output.
+
+# What is the number in the prompt??
+my $jdb_prompt_re = qr/^(?:>|\S+\[\d+\])\s*\z/m;
+
 $filter->prompt_handler(sub {
     my($prompt) = @_;
     if (defined($pager_fd)) {
         close($pager_fd) or die $!;
         $pager_fd = undef;
-    } else {
+    } elsif ($prompt !~ /^$jdb_prompt_re/) {
         parse_output($prompt);
+        # don't reject the prompt--we might get nothing more
     }
     $prompt;
 });
 
-# jdb is pretty stupid and sometimes outputs things like "VM Started :"
-# without printing a new prompt, so rlwrap thinks that's the prompt.  So we
-# parse both output and prompts.
 sub parse_output {
     my($s) = @_;
     $vm_running = 1 if $s =~ /^VM Started:/m;
@@ -333,7 +339,7 @@ sub parse_fields {
 sub cloak_and_dagger {
     my($cmd) = @_;
     my $output = $filter->cloak_and_dagger($cmd, ' ', 40);
-    $output =~ s/^[^\n]+\Z//m;
+    $output =~ s/$jdb_prompt_re//;
     parse_output($output);
     $output
 }
