@@ -112,15 +112,24 @@ Hit return to repeat the last next, step, step up, or cont.
 EOF
     } elsif ($expanded_line =~ /^\s*cont\s*$/) {
         $expanded_line = 'run' if !$vm_running;
-    # hacktastic redirection support
-  } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
+
+    #
+    # hacktastic file redirection support
+    #
+    # matches filenames without spaces
+    } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
       $expanded_line = $1;
       $redirmode = $2;
       $redirfilename = $3;
+    # matches filenames with spaces, surrounded by quotes
     } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*["']([\w\d\._\-\\\/ \/]*)["']\s*$/) {
       $expanded_line = $1;
       $redirmode = $2;
       $redirfilename = $3;
+    #
+    #
+    #
+
     } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
         if (!$vm_running) {
             if (!defined($main_class)) {
@@ -136,10 +145,10 @@ EOF
     }
     if ($redirfilename) {
       if (filenameTester($redirfilename)) {
-        open($redirfh, $redirmode, $redirfilename);
-        $redirfilename = '';
-      }
+        open($redirfh, $redirmode, $redirfilename) or die $!;
 
+      }
+      $redirfilename = '';
     }
 
     $expanded_line;
@@ -203,7 +212,7 @@ my $jdb_prompt_re = qr/^(?:>|\S+\[\d+\])\s*\z/m;
 $filter->prompt_handler(sub {
     my($prompt) = @_;
     if (defined($redirfh)) {
-      close($redirfh);
+      close($redirfh) or die $!;
       $redirfh = undef;
     }
     if (defined($pager_fd)) {
@@ -372,20 +381,23 @@ sub cloak_and_dagger {
     $output
 }
 
-# tests ti see if provided string value (more or less) is a valid file name
+# tests to see if provided string value is a valid file name (more or less)
 sub filenameTester {
   my $input = $_[0];
   my $pat = '^[\d\w\.\-_ \\' . sep() . ']+$';
   if ($input !~ qr/$pat/) {
+    # invalid, contains characters outside of the filepath seperator a-z 0-9 . - _ and space
     return 0;
   }
   my @bn = split(sep(), $input);
   my $fn = pop(@bn);
   my $dn = join('/', @bn);
+  # if file path includes directories...
   if ($dn) {
     if ( (! -w $dn) || (! -d $dn) ) {
+      # invalid, if directory does not exist or is not writable
       return 0;
-    } else{
+    } else {
       return 1;
     }
   } else {
@@ -393,7 +405,7 @@ sub filenameTester {
   }
 }
 
-
+# provides correct file path seperator depending on OS
 sub sep() {
   if ("$^O" =~ /MSWin.*/) {
     return '\\';
