@@ -6,6 +6,12 @@ repetition, and completion of breakpoints and variables.
 [jdb]: http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/jdb.html
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
 
+
+This forked version has been modified from the original to also allow file output redirection of output. e.g.
+
+    > classes > my-output-file
+
+
 Usage
 =====
 

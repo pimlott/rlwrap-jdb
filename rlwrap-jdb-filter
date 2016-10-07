@@ -12,6 +12,10 @@ use Getopt::Long;
 use lib ($ENV{RLWRAP_FILTERDIR} or '.');
 use RlwrapFilter;
 
+my $redirfilename = '';
+my $redirfh = undef;
+my $redirmode = '';
+
 my $filter = RlwrapFilter->new();
 my $name = $filter->name();
 
@@ -71,6 +75,7 @@ if (!defined($main_class)) {
 }
 
 my($vm_running, $current_line, $raw_line, $pager_fd);
+$raw_line = '';
 my $repeat_expanded_line = 'cont';
 my $current_class = $main_class;
 
@@ -107,6 +112,15 @@ Hit return to repeat the last next, step, step up, or cont.
 EOF
     } elsif ($expanded_line =~ /^\s*cont\s*$/) {
         $expanded_line = 'run' if !$vm_running;
+    # hacktastic redirection support
+  } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
+      $expanded_line = $1;
+      $redirmode = $2;
+      $redirfilename = $3;
+    } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*["']([\w\d\._\-\\\/ \/]*)["']\s*$/) {
+      $expanded_line = $1;
+      $redirmode = $2;
+      $redirfilename = $3;
     } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
         if (!$vm_running) {
             if (!defined($main_class)) {
@@ -120,6 +134,14 @@ EOF
             }
         }
     }
+    if ($redirfilename) {
+      if (filenameTester($redirfilename)) {
+        open($redirfh, $redirmode, $redirfilename);
+        $redirfilename = '';
+      }
+
+    }
+
     $expanded_line;
 });
 
@@ -158,7 +180,10 @@ $filter->echo_handler(sub {
 # this sends us the prompt too, unless in patient mode
 $filter->output_handler(sub {
     my($s) = @_;
-    if (defined($pager_fd)) {
+    if (defined($redirfh)) {
+      print $redirfh $s;
+      '';
+    } elsif (defined($pager_fd)) {
         print $pager_fd $s;
         ''
     } else {
@@ -177,6 +202,10 @@ my $jdb_prompt_re = qr/^(?:>|\S+\[\d+\])\s*\z/m;
 
 $filter->prompt_handler(sub {
     my($prompt) = @_;
+    if (defined($redirfh)) {
+      close($redirfh);
+      $redirfh = undef;
+    }
     if (defined($pager_fd)) {
         close($pager_fd) or die $!;
         $pager_fd = undef;
@@ -341,4 +370,36 @@ sub cloak_and_dagger {
     $output =~ s/$jdb_prompt_re//;
     parse_output($output);
     $output
+}
+
+# tests ti see if provided string value (more or less) is a valid file name
+sub filenameTester {
+  my $input = $_[0];
+  my $pat = '^[\d\w\.\-_ \\' . sep() . ']+$';
+  if ($input !~ qr/$pat/) {
+    return 0;
+  }
+  my @bn = split(sep(), $input);
+  my $fn = pop(@bn);
+  my $dn = join('/', @bn);
+  if ($dn) {
+    if ( (! -w $dn) || (! -d $dn) ) {
+      return 0;
+    } else{
+      return 1;
+    }
+  } else {
+    return 1;
+  }
+}
+
+
+sub sep() {
+  if ("$^O" =~ /MSWin.*/) {
+    return '\\';
+  }
+  else
+  {
+    return '/';
+  }
 }
