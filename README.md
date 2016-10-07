@@ -7,7 +7,7 @@ repetition, and completion of breakpoints and variables.
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
 
 
-This forked version has been modified from the original to also allow file output redirection of output. e.g.
+This forked version has been modified from the original to also allow file output redirection. e.g.
 
     > classes > my-output-file
 
