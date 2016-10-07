@@ -117,12 +117,12 @@ EOF
     # hacktastic file redirection support
     #
     # matches filenames without spaces
-    } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
+    } elsif ($expanded_line =~ /^(\s*[\w\s\d\$_\.\-\(\)]*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
       $expanded_line = $1;
       $redirmode = $2;
       $redirfilename = $3;
     # matches filenames with spaces, surrounded by quotes
-    } elsif ($expanded_line =~ /^(\s*\w*\s*)(>{1,2})\s*["']([\w\d\._\-\\\/ \/]*)["']\s*$/) {
+    } elsif ($expanded_line =~ /^(\s*[\w\s\d\$_\.\-\(\)]*\s*)(>{1,2})\s*["']([\w\d\._\-\\\/ \/]*)["']\s*$/) {
       $expanded_line = $1;
       $redirmode = $2;
       $redirfilename = $3;
