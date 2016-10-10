@@ -19,6 +19,23 @@ my $redirmode = '';
 my $filter = RlwrapFilter->new();
 my $name = $filter->name();
 
+#
+# Debugging
+#
+my $debug = 0;
+my $debugfile = '/tmp/debug.txt';
+my $debugfh = undef;
+# stick the following in the code where necesary
+# if (defined($debugfh)) {print $debugfh "Something happened\n"}
+
+if ($debug) {
+   use IO::Handle;
+   open($debugfh, '>', $debugfile) or die("$!\n");
+   $debugfh->autoflush;
+}
+
+
+
 my $usage = <<EOF;
 Usage:
   rlwrap -z '$name [OPT]...' <command>
@@ -85,6 +102,18 @@ $filter->input_handler(sub {
     my($expanded_line) = expand($line);
     $repeat_expanded_line = $expanded_line
         if $expanded_line =~ /^\s*(?:next|step|step up|cont)\s*$/;
+
+    # hacktastic file redirection support
+    if ($expanded_line =~ /^(\s*[\w\s\d\$_\/\\:\.\-\(\)]*\s*)(>{1,2})\s*["']{1}([\w\d\.:_\-\\\/ \/]+)["']{1}\s*$/) {
+      $expanded_line = $1;
+      $redirmode = $2;
+      $redirfilename = $3;
+    } elsif ($expanded_line =~ /^(\s*[\w\s\d\$_\/\\:\.\-\(\)]*\s*)(>{1,2})\s*([\w\d\.:_\-\\\/\/]+)\s*$/) {
+      $expanded_line = $1;
+      $redirmode = $2;
+      $redirfilename = $3;
+    }
+
     if ($expanded_line =~ /^\s*(?:help|\?)\s*/) {
         open($pager_fd, '|-', 'less') or die $!;
         print $pager_fd <<EOF;
@@ -110,25 +139,27 @@ q                         -- quit
 Hit return to repeat the last next, step, step up, or cont.
 
 EOF
+    # run file support
+    } elsif ($expanded_line =~ /^\s*runfile\s+["']*[\w\d\.:_\-\\\/ \/]+["']*\s*$/) {
+      # filename surrounded by quotes, including spaces
+      $expanded_line =~ /^\s*runfile\s+["']{1}([\w\d\.:_\-\\\/ \/]+)["']{1}\s*$/;
+      my $inputfile = $1;
+      if (! $inputfile) {
+        # filename without quotes, no spaces
+        $expanded_line =~ /^\s*runfile\s+([\w\d\.:_\-\\\/\/]+)\s*$/;
+        $inputfile = $1;
+      }
+      if (-r $inputfile) {
+        open my $handle, '<', $inputfile;
+        chomp(my @commands = <$handle>);
+        close $handle;
+        $expanded_line = multiple_commands(@commands);
+      } else {
+        $expanded_line = '';
+      }
+
     } elsif ($expanded_line =~ /^\s*cont\s*$/) {
         $expanded_line = 'run' if !$vm_running;
-
-    #
-    # hacktastic file redirection support
-    #
-    # matches filenames without spaces
-    } elsif ($expanded_line =~ /^(\s*[\w\s\d\$_\.\-\(\)]*\s*)(>{1,2})\s*([\w\d\._\-\\\/\/]*)\s*$/) {
-      $expanded_line = $1;
-      $redirmode = $2;
-      $redirfilename = $3;
-    # matches filenames with spaces, surrounded by quotes
-    } elsif ($expanded_line =~ /^(\s*[\w\s\d\$_\.\-\(\)]*\s*)(>{1,2})\s*["']([\w\d\._\-\\\/ \/]*)["']\s*$/) {
-      $expanded_line = $1;
-      $redirmode = $2;
-      $redirfilename = $3;
-    #
-    #
-    #
 
     } elsif ($expanded_line =~ /^\s*(?:next|step)\s*$/) {
         if (!$vm_running) {
@@ -146,7 +177,6 @@ EOF
     if ($redirfilename) {
       if (filenameTester($redirfilename)) {
         open($redirfh, $redirmode, $redirfilename) or die $!;
-
       }
       $redirfilename = '';
     }
@@ -156,7 +186,7 @@ EOF
 
 # used by command_error and multiple_commands, when we need to control what
 # is printed after the normal echo.  They are subs so we can stream.
-my @command_output_subs;
+my @command_output_subs = ();
 
 # Simply returning multiple newline-separated commands isn't handled ideally
 # by RlwrapFilter: all after the first are echoed immediately.  Work around
@@ -180,7 +210,11 @@ $filter->echo_handler(sub {
     foreach (@command_output_subs) {
         my $r = $_->();
         chomp($r);
-        $filter->send_output_oob("\n$r");
+        if (defined($redirfh)) {
+          print $redirfh $r . "\n\n";
+        } else {
+          $filter->send_output_oob("\n$r");
+        }
     }
     @command_output_subs = ();
     ''
@@ -257,6 +291,7 @@ $filter->completion_handler(sub {
 });
 
 $filter->run();
+if (defined($debugfh)) { close($debugfh) }
 exit;
 
 sub breakpoint_completions {
@@ -378,28 +413,24 @@ sub cloak_and_dagger {
     my $output = $filter->cloak_and_dagger($cmd, ' ', 40);
     $output =~ s/$jdb_prompt_re//;
     parse_output($output);
-    $output
+    $output;
 }
 
-# tests to see if provided string value is a valid file name (more or less)
+# tests to see if provided string value is a valid writable file name (more or less)
 sub filenameTester {
   my $input = $_[0];
-  my $pat = '^[\d\w\.\-_ \\' . sep() . ']+$';
+  my $pat = '^[\d\w\.\-_ :\\' . sep() . ']+$';
   if ($input !~ qr/$pat/) {
-    # invalid, contains characters outside of the filepath seperator a-z 0-9 . - _ and space
+    # invalid, contains characters outside of the filepath seperator a-z 0-9 . : - _ and space
     return 0;
   }
   my @bn = split(sep(), $input);
   my $fn = pop(@bn);
   my $dn = join('/', @bn);
-  # if file path includes directories...
-  if ($dn) {
-    if ( (! -w $dn) || (! -d $dn) ) {
-      # invalid, if directory does not exist or is not writable
-      return 0;
-    } else {
-      return 1;
-    }
+  if (! $dn) {$dn = '.'} # if file path doesnt include directory info, set to pwd
+  if ( (! -w $dn) || (! -d $dn) ) {
+    # invalid, if directory does not exist or is not writable
+    return 0;
   } else {
     return 1;
   }
