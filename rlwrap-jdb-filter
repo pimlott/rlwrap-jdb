@@ -117,7 +117,10 @@ $filter->input_handler(sub {
     if ($expanded_line =~ /^\s*(?:help|\?)\s*/) {
         open($pager_fd, '|-', 'less') or die $!;
         print $pager_fd <<EOF;
-** rlwrap-jdb shortcuts **
+** rlwrap-jdb shortcuts and additional commands **
+[command] [>|>>] [file]   -- redirect command output to file
+runfile [file]            -- run a sequence of commands from file
+                             (newline-separated)
 b <class id>.<method>[(argument_type,...)]
                           -- set a breakpoint in a method
 b <class id>:<line>       -- set a breakpoint at a line

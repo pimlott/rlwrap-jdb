@@ -7,9 +7,23 @@ repetition, and completion of breakpoints and variables.
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
 
 
-This forked version has been modified from the original to also allow file output redirection. e.g.
+This forked version has been modified from the original to also allow file 
+output redirection as well as support for running commands from an external 
+file.
+
+File output redirection works like so:
 
     > classes > my-output-file
+
+
+Running commands from a (newline separated) file works like so:
+
+    > runfile /tmp/commands.txt
+
+
+The two can also be combined like so:
+
+    > runfile /tmp/commands.txt > /tmp/output.txt
 
 
 Usage
