@@ -1,15 +1,11 @@
 rlwrap-jdb is a rearguard effort to make [jdb][jdb] almost usable.  It
 uses to [rlwrap][rlwrap] not to add not only command-line editing and
 history, but (using rlwrap's nifty filter mechanism) handy aliases, command
-repetition, and completion of breakpoints and variables.
+repetition, file redirection and completion of breakpoints and variables.
 
 [jdb]: http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/jdb.html
 [rlwrap]: http://utopia.knoware.nl/~hlub/rlwrap/
 
-
-This forked version has been modified from the original to also allow file 
-output redirection as well as support for running commands from an external 
-file.
 
 File output redirection works like so:
 
